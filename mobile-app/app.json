@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "DemoBank",
+    "slug": "demo-bank-mockup",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "demobank",
+    "ios": { "supportsTablet": false },
+    "android": {
+      "package": "com.demobank.mockup",
+      "permissions": ["CAMERA"]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        { "cameraPermission": "Allow DemoBank to scan ATM QR codes." }
+      ]
+    ]
+  }
+}

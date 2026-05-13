@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+.expo/
+.env
+.env.local
+*.log
+.DS_Store
+
+# Go
+backend-go/server
+backend-go/server.exe
+backend-go/atm-auth
+backend-go/atm-auth.exe
+*.test
+*.out
+
+# IDE
+.vscode/
+.idea/
+.claude/
+

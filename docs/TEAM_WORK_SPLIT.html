@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Cardless ATM Authentication — Team Work Split</title>
+<style>
+  :root {
+    --c-sky:    #447794;
+    --c-steel:  #2D5B75;
+    --c-deep:   #123249;
+    --c-night:  #061222;
+    --c-ink:    #1a2535;
+    --c-muted:  #5a6b80;
+    --c-page:   #ffffff;
+    --c-band:   #f4f7fa;
+    --c-line:   #d8e1ea;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--c-page); color: var(--c-ink);
+    font-family: "Helvetica Neue", "Segoe UI", Arial, sans-serif; line-height: 1.55; font-size: 11pt; }
+  .page { max-width: 800px; margin: 0 auto; padding: 50px 56px; }
+
+  .cover { min-height: 92vh; display: flex; flex-direction: column; justify-content: space-between;
+    background: linear-gradient(180deg, var(--c-deep) 0%, var(--c-night) 100%); color: #fff;
+    padding: 60px 56px; page-break-after: always; }
+  .cover .top { font-size: 11pt; letter-spacing: 6px; color: #8FB1C4; text-transform: uppercase; }
+  .cover h1 { font-size: 38pt; line-height: 1.1; margin: 28px 0 14px; font-weight: 600; letter-spacing: -1px; }
+  .cover .tagline { font-size: 14pt; color: #b8c4dd; max-width: 540px; line-height: 1.5; }
+  .cover .meta { border-top: 1px solid rgba(143,177,196,0.25); padding-top: 24px; font-size: 10pt; color: #8FB1C4; }
+  .cover .meta div { margin-bottom: 6px; letter-spacing: 1px; }
+
+  h2 { color: var(--c-deep); font-size: 20pt; margin: 0 0 6px; font-weight: 600; letter-spacing: -0.3px; }
+  h3 { color: var(--c-steel); font-size: 13pt; margin: 22px 0 8px; font-weight: 600; }
+  h4 { color: var(--c-deep); font-size: 11pt; margin: 14px 0 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
+  .kicker { font-size: 9pt; letter-spacing: 4px; color: var(--c-sky); text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 6px 0 10px; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+
+  .section { page-break-after: always; padding-top: 6px; }
+  .section:last-of-type { page-break-after: auto; }
+
+  .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+  .card { border: 1px solid var(--c-line); border-radius: 10px; padding: 18px 20px; background: var(--c-page); }
+  .card .who { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase; color: var(--c-sky); font-weight: 700; }
+  .card h3 { margin-top: 4px; }
+  .card .scope { color: var(--c-muted); font-size: 10pt; margin-top: 8px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 10px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--c-line); vertical-align: top; }
+  th { background: var(--c-band); color: var(--c-deep); font-weight: 700; font-size: 9pt; letter-spacing: 1px; text-transform: uppercase; }
+
+  code, .mono { font-family: "Consolas", "SF Mono", Menlo, monospace; font-size: 9.5pt;
+    background: var(--c-band); padding: 1px 6px; border-radius: 4px; color: var(--c-deep); }
+
+  .callout { background: var(--c-band); border-left: 4px solid var(--c-sky); padding: 14px 18px;
+    border-radius: 6px; margin: 14px 0; font-size: 10pt; }
+  .callout strong { color: var(--c-deep); }
+
+  .pill { display: inline-block; background: var(--c-deep); color: #fff; padding: 2px 9px;
+    border-radius: 999px; font-size: 8.5pt; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+  .pill.muted { background: var(--c-band); color: var(--c-deep); }
+  .pill.done    { background: #1f8a4d; color: #fff; }
+  .pill.partial { background: #c9a961; color: #1a2535; }
+  .pill.pending { background: #b0bcc9; color: #1a2535; }
+  .pill.blocked { background: #b14a4a; color: #fff; }
+
+  .progress-bar { position: relative; background: var(--c-band); border-radius: 999px;
+    height: 14px; overflow: hidden; margin: 6px 0 12px; border: 1px solid var(--c-line); }
+  .progress-bar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--c-sky), var(--c-steel)); }
+  .progress-row { display: grid; grid-template-columns: 200px 1fr 70px; gap: 14px; align-items: center;
+    margin: 10px 0; font-size: 10pt; }
+  .progress-row .label { font-weight: 600; color: var(--c-deep); }
+  .progress-row .pct { text-align: right; font-variant-numeric: tabular-nums; color: var(--c-muted); }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 14px 0 22px; font-size: 9.5pt; color: var(--c-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.done    { background: #1f8a4d; }
+  .dot.partial { background: #c9a961; }
+  .dot.pending { background: #b0bcc9; }
+  .dot.blocked { background: #b14a4a; }
+
+  .ascii { background: var(--c-night); color: #b8c4dd; padding: 18px; border-radius: 8px;
+    font-family: "Consolas", monospace; font-size: 9pt; white-space: pre; overflow-x: auto;
+    line-height: 1.45; margin: 14px 0; }
+
+  .footer { font-size: 8.5pt; color: var(--c-muted); text-align: center; padding-top: 30px;
+    border-top: 1px solid var(--c-line); margin-top: 40px; letter-spacing: 1px; text-transform: uppercase; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { padding: 36px 40px; max-width: none; }
+    .cover { min-height: 96vh; }
+    h2, h3, h4 { break-after: avoid-page; }
+    table, .card, .callout, .ascii { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<section class="cover">
+  <div>
+    <div class="top">Cardless Authentication Layer</div>
+    <h1>QR-Based ATM Authentication System</h1>
+    <p class="tagline">Two-person engineering plan for the MVP — split into the Simulation track and the Authenticator track, with a single integration contract.</p>
+  </div>
+  <div class="meta">
+    <div>DOCUMENT&nbsp;&nbsp;·&nbsp;&nbsp;Team Work Split — MVP Build Plan</div>
+    <div>VERSION&nbsp;&nbsp;·&nbsp;&nbsp;1.0</div>
+    <div>SCOPE&nbsp;&nbsp;·&nbsp;&nbsp;Phase 1 — QR-only authentication (locked)</div>
+    <div>DATE&nbsp;&nbsp;·&nbsp;&nbsp;2026</div>
+  </div>
+</section>
+
+<!-- PROGRESS SNAPSHOT -->
+<section class="section page">
+  <div class="kicker">Progress Snapshot</div>
+  <h2>How much is done, how much is pending</h2>
+  <p>Status as of the latest build of the MVP. Code is written end-to-end; what remains is verification on a real device and the final demo polish.</p>
+
+  <div class="legend">
+    <span><span class="dot done"></span> Done</span>
+    <span><span class="dot partial"></span> Partial / needs testing</span>
+    <span><span class="dot pending"></span> Pending</span>
+    <span><span class="dot blocked"></span> Blocked</span>
+  </div>
+
+  <h3>Overall completion</h3>
+  <div class="progress-row"><div class="label">ATM Simulator (Yours)</div><div class="progress-bar"><span style="width:95%"></span></div><div class="pct">95%</div></div>
+  <div class="progress-row"><div class="label">Mobile App (Yours)</div><div class="progress-bar"><span style="width:90%"></span></div><div class="pct">90%</div></div>
+  <div class="progress-row"><div class="label">Authenticator (Teammate)</div><div class="progress-bar"><span style="width:90%"></span></div><div class="pct">90%</div></div>
+  <div class="progress-row"><div class="label">Docs &amp; PDF pack</div><div class="progress-bar"><span style="width:80%"></span></div><div class="pct">80%</div></div>
+  <div class="progress-row"><div class="label">Verified end-to-end on phone</div><div class="progress-bar"><span style="width:0%"></span></div><div class="pct">0%</div></div>
+  <div class="progress-row"><div class="label">Recorded demo video</div><div class="progress-bar"><span style="width:0%"></span></div><div class="pct">0%</div></div>
+
+  <h3>What's done</h3>
+  <ul>
+    <li>Monorepo scaffolded: <span class="mono">/backend-go</span>, <span class="mono">/atm-simulator</span>, <span class="mono">/mobile-app</span>, <span class="mono">/docs</span>.</li>
+    <li>Authenticator backend: session create, JWT-signed QR, approve, consume, expire sweeper, audit log, WebSocket push.</li>
+    <li>ATM Simulator: all 8 screens wired (idle → menu → QR → approved → withdraw → done → expired), WebSocket subscription, Coastal Midnight theme.</li>
+    <li>Mobile App: login → home → scanner → confirm → success, with camera permission flow and Coastal Midnight theme.</li>
+    <li>Architecture, API, Run and Team-Split docs written.</li>
+  </ul>
+
+  <h3>What's pending</h3>
+  <ul>
+    <li><strong>Install &amp; run.</strong> <span class="mono">npm install</span> has not been run yet in any of the three folders.</li>
+    <li><strong>Live end-to-end test on a real phone</strong> with the laptop on the same Wi-Fi.</li>
+    <li><strong>Set <span class="mono">API_BASE</span></strong> in <span class="mono">mobile-app/App.tsx</span> to the laptop's LAN IP for real-device demo.</li>
+    <li><strong>90-second demo video</strong> recorded with Windows Game Bar.</li>
+    <li><strong>PDF export</strong> of all four docs (this file, Architecture, API, Run).</li>
+    <li><strong>One-page proposal</strong> for the Bangladesh Bank Governor (not yet drafted).</li>
+  </ul>
+
+  <h3>Critical path to "demo ready"</h3>
+  <ol>
+    <li>Run <span class="mono">npm install</span> in all three folders.</li>
+    <li>Start backend, ATM simulator, Expo dev server.</li>
+    <li>Test full flow once on a phone — confirm under-3-second unlock.</li>
+    <li>Fix any one-off bugs that surface.</li>
+    <li>Record demo video. Export PDFs. Done.</li>
+  </ol>
+
+  <p style="margin-top:14px;color:var(--c-muted);font-size:9.5pt;">Estimated remaining work to demo-ready: <strong>2–4 hours</strong> total across both engineers, mostly install + verify.</p>
+</section>
+
+<!-- 1. OVERVIEW -->
+<section class="section page">
+  <div class="kicker">01 — Project Overview</div>
+  <h2>What we are building</h2>
+  <p>A QR-based ATM authentication layer. It plugs into an existing bank's ATM and an existing bank's mobile app. It allows a customer to unlock the ATM cash-withdrawal flow without inserting a physical card — the customer scans the ATM's QR with their bank app, approves with their existing biometrics, and the ATM unlocks.</p>
+  <p>Our system <strong>does not</strong> move money, hold balances, talk to the bank's ledger, or replace ATM hardware. It only answers one question on demand: <em>"is this customer authorised for this ATM session right now?"</em></p>
+
+  <h3>The three components</h3>
+  <div class="ascii">
+   +---------------------------+         +-------------------------+
+   |  ATM Simulator            |         |  Mobile Bank App        |
+   |  (Web — React)            |         |  (React Native/Expo)    |
+   |  shows menu, QR, unlock   |         |  scans QR, approves     |
+   +-------------+-------------+         +------------+------------+
+                 |  REST + WebSocket                  | REST
+                 |                                    |
+                 v                                    v
+   +-------------------------------------------------------------+
+   |        Authenticator — Auth Middleware (Go)                 |
+   |  session create · JWT QR · approve · expire · audit log     |
+   +-------------------------------------------------------------+
+  </div>
+
+  <div class="callout">
+    <strong>The team split, in one line.</strong>
+    You own the two <em>simulation</em> surfaces — the ATM screen and the bank-app mockup. Your teammate owns the <em>authenticator</em> — the brain of the product. The two halves meet at a documented HTTP + WebSocket contract on <span class="mono">localhost:4000</span>.
+  </div>
+</section>
+
+<!-- 2. SPLIT SUMMARY -->
+<section class="section page">
+  <div class="kicker">02 — Team Split at a Glance</div>
+  <h2>Who owns what</h2>
+  <div class="twocol">
+    <div class="card">
+      <div class="who">YOU — Simulation Engineer</div>
+      <h3>ATM Simulator + Bank App Mockup</h3>
+      <p class="scope">All user-facing surfaces. The ATM screen the customer sees, and the bank-app feature the customer uses to approve. Calls the authenticator's APIs over HTTP and listens on WebSocket for instant unlock.</p>
+      <h4>Stack</h4>
+      <ul>
+        <li>ATM Simulator: <span class="mono">React + Vite + TypeScript</span></li>
+        <li>Mobile mockup: <span class="mono">React Native + Expo</span></li>
+        <li>Camera: <span class="mono">expo-camera</span></li>
+        <li>QR rendering: <span class="mono">qrcode.react</span></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="who">TEAMMATE — Authenticator Engineer</div>
+      <h3>Auth Middleware Backend</h3>
+      <p class="scope">The brain. Issues short-lived signed QR tokens, validates approvals from the bank app, pushes the unlock signal back to the ATM over WebSocket, and writes an audit log for every state change.</p>
+      <h4>Stack</h4>
+      <ul>
+        <li>Runtime: <span class="mono">Go 1.22 + net/http</span></li>
+        <li>Real-time: <span class="mono">gorilla/websocket</span></li>
+        <li>Signing: <span class="mono">golang-jwt/v5 (HS256)</span></li>
+        <li>Session store: in-memory <span class="mono">sync.RWMutex map</span> (Redis-ready)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Why this split works</h3>
+  <ul>
+    <li><strong>Parallel work, zero blocking.</strong> Once the API contract on the next page is agreed, the two tracks can build independently with mocks and meet at the end.</li>
+    <li><strong>Clear ownership boundary.</strong> No shared files, no merge conflicts.</li>
+    <li><strong>Demo-able in isolation.</strong> Each track can demo its own piece to Sir before integration.</li>
+  </ul>
+</section>
+
+<!-- 3. CONTRACT -->
+<section class="section page">
+  <div class="kicker">03 — Integration Contract</div>
+  <h2>The API that joins the two tracks</h2>
+  <p>This is the single document both engineers must obey. If you both implement against this contract correctly, integration is a five-minute job.</p>
+
+  <h3>HTTP endpoints (served by the Authenticator)</h3>
+  <table>
+    <thead><tr><th>Verb · Path</th><th>Caller</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">POST /api/session</span></td><td>ATM Simulator</td><td>Create a new ATM session. Returns <span class="mono">sessionId</span>, <span class="mono">qrToken</span>, <span class="mono">expiresAt</span>.</td></tr>
+      <tr><td><span class="mono">GET /api/session/:id</span></td><td>ATM Simulator</td><td>Polling fallback if WebSocket is not available.</td></tr>
+      <tr><td><span class="mono">POST /api/session/approve</span></td><td>Mobile App</td><td>Body: <span class="mono">{ qrToken, deviceId, customerRef }</span>. Verifies and marks session approved.</td></tr>
+      <tr><td><span class="mono">POST /api/session/:id/consume</span></td><td>ATM Simulator</td><td>Called after the ATM hands control to the existing withdrawal flow.</td></tr>
+      <tr><td><span class="mono">GET /api/audit</span></td><td>Either</td><td>Dev-only audit log dump.</td></tr>
+      <tr><td><span class="mono">GET /api/health</span></td><td>Either</td><td>Health check.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>WebSocket channel</h3>
+  <p>ATM Simulator connects to <span class="mono">ws://localhost:4000/ws?sid={sessionId}</span> right after creating a session. The Authenticator pushes:</p>
+  <ul>
+    <li><span class="mono">{ "type": "subscribed", "sid": "…" }</span> on connect</li>
+    <li><span class="mono">{ "type": "approved", "session": { … } }</span> when the bank app approves</li>
+    <li><span class="mono">{ "type": "consumed", "session": { … } }</span> after the ATM consumes the session</li>
+  </ul>
+
+  <h3>Session state machine (owned by Authenticator)</h3>
+  <div class="ascii">
+   pending  --approve-->  approved  --consume-->  consumed
+       \
+        --timeout (60s)-->  expired
+  </div>
+
+  <h3>Non-negotiables</h3>
+  <ul>
+    <li>QR token TTL: <strong>60 seconds</strong>, configurable via env <span class="mono">SESSION_TTL_SECONDS</span>.</li>
+    <li>Single-use: a session in any state other than <span class="mono">pending</span> rejects approval with HTTP 409.</li>
+    <li>QR token is a signed JWT (HS256). Authenticator verifies signature on approve.</li>
+    <li>Every state change writes to the audit log.</li>
+  </ul>
+</section>
+
+<!-- 4. YOUR PART -->
+<section class="section page">
+  <div class="kicker">04 — Your Track</div>
+  <h2>Simulation — ATM Screen &amp; Mobile App</h2>
+  <p>You own everything a human looks at. The ATM screen has to feel like a real ATM in a real bank lobby; the mobile app has to feel like a real bank app feature, not a prototype. Both surfaces use the Coastal Midnight palette (<span class="mono">#447794 · #2D5B75 · #123249 · #061222</span>) for a premium, conservative look that banks respond to.</p>
+
+  <h3>4.1 ATM Simulator deliverables</h3>
+  <table>
+    <thead><tr><th style="width:32%">Deliverable</th><th>Acceptance criteria</th><th style="width:90px">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Idle / welcome screen</td><td>Branded header, ATM ID visible, primary Continue button.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Main menu</td><td>Five options. Only <strong>Cardless Cash Withdrawal</strong> is enabled; others greyed.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>QR display screen</td><td>Calls <span class="mono">POST /api/session</span>, renders QR from <span class="mono">qrToken</span>, gold countdown timer, expires at 0.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>WebSocket subscription</td><td>Opens <span class="mono">ws?sid={id}</span> immediately after session create; flips to Authenticated on <span class="mono">approved</span> message.</td><td><span class="pill partial">Test</span></td></tr>
+      <tr><td>Authenticated screen</td><td>Glowing green status indicator + customer name from session.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Amount selector</td><td>Six preset amounts (£20–£1000). Selecting calls <span class="mono">POST /api/session/:id/consume</span>.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Done screen → auto-reset</td><td>"Please take your cash" then return to idle after 4 seconds.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Expired screen</td><td>Shown if the 60s elapses with no approval. Start-over button.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Polished theme</td><td>Coastal Midnight palette, uppercase brand headers, premium feel.</td><td><span class="pill done">Done</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Mobile App deliverables</h3>
+  <table>
+    <thead><tr><th style="width:32%">Deliverable</th><th>Acceptance criteria</th><th style="width:90px">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Mock login screen</td><td>Customer name input, mocked "Log in with Face ID" button.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Home screen</td><td>Greeting, fake balance, three feature tiles. <strong>Cardless ATM Access</strong> is the only enabled tile.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>QR scanner</td><td>Uses <span class="mono">expo-camera</span>, asks permission, only reads QR codes.</td><td><span class="pill partial">Test</span></td></tr>
+      <tr><td>Confirm screen</td><td>Disclaimer that no money is being moved. "Approve with biometrics" button.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Approval API call</td><td><span class="mono">POST /api/session/approve</span> with <span class="mono">{ qrToken, deviceId, customerRef }</span>. Handles 400 / 409 / 410 with user-friendly alerts.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Success screen</td><td>"ATM unlocked" confirmation, auto-returns to home after 3 seconds.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Coastal Midnight theme</td><td>Same palette as ATM; feels like a premium bank app.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Real-device tested</td><td>Works on at least one physical Android phone over LAN.</td><td><span class="pill pending">Pending</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.3 What you do NOT build</h3>
+  <ul>
+    <li>No JWT signing or verification — you only pass tokens through.</li>
+    <li>No session storage — that's the authenticator's job.</li>
+    <li>No audit log — only the authenticator writes it.</li>
+    <li>No real biometric integration — Face ID stays mocked for v1.</li>
+  </ul>
+
+  <h3>4.4 Your milestones</h3>
+  <table>
+    <thead><tr><th>Day</th><th>Milestone</th><th style="width:90px">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Day 1</td><td>Scaffolding complete: Vite app boots, Expo app boots, Coastal Midnight theme applied to both.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Day 2</td><td>ATM screens 1–4 done with hard-coded data, no backend yet.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Day 3</td><td>Wired to live backend on localhost. QR generation working end-to-end.</td><td><span class="pill partial">Test</span></td></tr>
+      <tr><td>Day 4</td><td>Mobile scanner + approval flow working against teammate's backend.</td><td><span class="pill partial">Test</span></td></tr>
+      <tr><td>Day 5</td><td>WebSocket unlock instant. Demo-ready on phone + laptop. Recorded demo video.</td><td><span class="pill pending">Pending</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 5. TEAMMATE PART -->
+<section class="section page">
+  <div class="kicker">05 — Teammate's Track</div>
+  <h2>Authenticator — The Brain</h2>
+  <p>The authenticator is the entire commercial value of the product. Banks will audit this part the hardest. Your teammate's job is to make it correct, observable, and unmistakably secure-by-design even in v1.</p>
+
+  <h3>5.1 Deliverables</h3>
+  <table>
+    <thead><tr><th style="width:32%">Deliverable</th><th>Acceptance criteria</th><th style="width:90px">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Session engine</td><td>Create, read, update, expire ATM sessions. State machine enforced.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>JWT QR signing</td><td>HS256, secret from env. Payload: <span class="mono">{ sid, atm, iat, exp }</span>.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Approve endpoint</td><td>Verifies token signature, checks status is pending, checks not expired, accepts <span class="mono">deviceId</span> + <span class="mono">customerRef</span>, returns 409/410 on bad state.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Consume endpoint</td><td>Marks an approved session consumed; rejects any other state.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>WebSocket push</td><td>On approve, pushes JSON to all clients subscribed to that <span class="mono">sid</span>. On consume, also broadcasts.</td><td><span class="pill partial">Test</span></td></tr>
+      <tr><td>Expiry sweeper</td><td>Background interval marks pending sessions <span class="mono">expired</span> the moment they pass <span class="mono">expiresAt</span>.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Audit log</td><td>Append-only record of every state transition with timestamp, sessionId, event, and detail. Exposed via <span class="mono">GET /api/audit</span> for the dev dashboard.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Config via env</td><td><span class="mono">PORT</span>, <span class="mono">JWT_SECRET</span>, <span class="mono">SESSION_TTL_SECONDS</span>.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Redis-ready store</td><td>Session store abstracted behind an interface so swapping the in-memory Map for Redis is a one-file change.</td><td><span class="pill partial">Partial</span></td></tr>
+      <tr><td>Dev README + cURL examples</td><td>Teammate's <span class="mono">backend-go/README.md</span> with one cURL per endpoint so you can test the API without the simulator.</td><td><span class="pill pending">Pending</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.2 What teammate does NOT build</h3>
+  <ul>
+    <li>No UI of any kind.</li>
+    <li>No real bank-core integration — that is a pilot-phase task, not MVP.</li>
+    <li>No facial recognition, no OTP, no NFC — those are v2.</li>
+    <li>No HSM integration — env-var secret is acceptable for MVP demo.</li>
+  </ul>
+
+  <h3>5.3 Security properties teammate must guarantee</h3>
+  <table>
+    <thead><tr><th>Property</th><th>How</th></tr></thead>
+    <tbody>
+      <tr><td>Short-lived sessions</td><td>60s TTL, enforced on every read.</td></tr>
+      <tr><td>Single-use</td><td>State machine rejects re-approval.</td></tr>
+      <tr><td>Tamper-evident QR</td><td>JWT signature verified before any state change.</td></tr>
+      <tr><td>Replay protection</td><td>Token bound to a session id that flips status on first use.</td></tr>
+      <tr><td>Device binding (foundation)</td><td><span class="mono">deviceId</span> captured and stored at approval time for audit.</td></tr>
+      <tr><td>Full audit</td><td>Every event logged with timestamp.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.4 Teammate's milestones</h3>
+  <table>
+    <thead><tr><th>Day</th><th>Milestone</th><th style="width:90px">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Day 1</td><td>Express app boots, <span class="mono">/api/health</span> works, project skeleton agreed.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Day 2</td><td>Session create + get + JWT signing complete, tested with cURL.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Day 3</td><td>Approve endpoint with full state-machine checks; audit log entries verified.</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td>Day 4</td><td>WebSocket push working end-to-end. Sweeper interval expires stale sessions.</td><td><span class="pill partial">Test</span></td></tr>
+      <tr><td>Day 5</td><td>Hardened: error codes consistent, README with cURL examples, ready for joint demo.</td><td><span class="pill pending">Pending</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 6. SHARED -->
+<section class="section page">
+  <div class="kicker">06 — Shared Responsibilities</div>
+  <h2>Things both of us own together</h2>
+
+  <h3>Daily sync (15 minutes)</h3>
+  <ul>
+    <li>Yesterday's progress vs. milestone.</li>
+    <li>Today's task.</li>
+    <li>Anything blocking the other person.</li>
+    <li>Any change to the API contract — change goes in writing.</li>
+  </ul>
+
+  <h3>Source of truth</h3>
+  <ul>
+    <li><span class="mono">/docs/API.md</span> — the contract. If it isn't in there, it doesn't exist.</li>
+    <li><span class="mono">/docs/ARCHITECTURE.md</span> — the system picture.</li>
+    <li><span class="mono">/docs/RUN.md</span> — how to run everything locally.</li>
+  </ul>
+
+  <h3>End-of-day check</h3>
+  <ol>
+    <li>Pull each other's work.</li>
+    <li>Run the full flow once: ATM → QR → mobile scan → approve → ATM unlock.</li>
+    <li>If it breaks, the side that introduced the break fixes it before EOD.</li>
+  </ol>
+
+  <h3>Definition of done for the MVP</h3>
+  <ol>
+    <li>Three commands start the system: backend, atm-simulator, mobile-app.</li>
+    <li>On a phone, the full QR scan → approve → ATM unlock flow takes under 3 seconds.</li>
+    <li>QR expires automatically at 60 seconds with a clean expired screen.</li>
+    <li>Audit log shows the full chain of events for at least one successful and one expired session.</li>
+    <li>A 90-second screen-recorded demo video exists.</li>
+    <li>The proposal-grade docs (Architecture, API, Run, this Team Split) all exist as PDFs.</li>
+  </ol>
+
+  <h3>What we are NOT trying to do in MVP</h3>
+  <ul>
+    <li>Integrate with a real ATM vendor (NCR, Diebold) — pilot phase.</li>
+    <li>Integrate with a real bank app SDK — pilot phase.</li>
+    <li>Move money, read balances, or talk to a bank ledger — never.</li>
+    <li>HSM, Redis, Docker, Kubernetes — post-pilot phase.</li>
+    <li>OTP, biometric face match, NFC — v2 features.</li>
+  </ul>
+</section>
+
+<!-- 7. CLOSING -->
+<section class="section page">
+  <div class="kicker">07 — Closing</div>
+  <h2>What we deliver to Sir at the end of this sprint</h2>
+  <ol>
+    <li>A working end-to-end demo on a laptop + phone, themed in Coastal Midnight, that takes under 3 seconds from QR scan to ATM unlock.</li>
+    <li>A 90-second screen recording of that demo.</li>
+    <li>Four PDF documents: this Team Split, the Architecture, the API spec, and a Run guide.</li>
+    <li>A short proposal-style one-pager Sir can forward to the Bangladesh Bank Governor.</li>
+  </ol>
+
+  <div class="callout">
+    <strong>One sentence summary for Sir:</strong> "She owns the ATM screen and bank-app mockup. He owns the secure authentication brain. Both halves meet on a documented contract and we demo a working system at the end of the sprint."
+  </div>
+
+  <div class="footer">Cardless Authentication Layer — Internal Team Plan — Confidential</div>
+</section>
+
+</body>
+</html>
