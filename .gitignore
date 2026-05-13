@@ -1,9 +1,8 @@
 node_modules/
 dist/
 build/
+*.tsbuildinfo
 .expo/
-.env
-.env.local
 *.log
 .DS_Store
 
@@ -20,3 +19,4 @@ backend-go/atm-auth.exe
 .idea/
 .claude/
 
+config.bat
